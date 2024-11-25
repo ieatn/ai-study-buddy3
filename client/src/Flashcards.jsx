@@ -4,6 +4,10 @@ import { flashcardsData } from './data/flashcardsData';
 const Flashcards = () => {
   const [currentCard, setCurrentCard] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [userAnswers, setUserAnswers] = useState(() => {
+    const saved = localStorage.getItem('flashcardAnswers');
+    return saved ? JSON.parse(saved) : {};
+  });
 
   const handleFlip = () => {
     setIsFlipped(!isFlipped);
@@ -19,8 +23,17 @@ const Flashcards = () => {
     setIsFlipped(false);
   };
 
+  const handleAnswer = (isEasy) => {
+    const newAnswers = {
+      ...userAnswers,
+      [currentCard]: isEasy
+    };
+    setUserAnswers(newAnswers);
+    localStorage.setItem('flashcardAnswers', JSON.stringify(newAnswers));
+  };
+
   return (
-    <div className="flex flex-col items-center gap-6 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-6 p-4">
       <div 
         className="relative w-80 h-52 [perspective:1000px] cursor-pointer"
         onClick={handleFlip}
@@ -44,17 +57,24 @@ const Flashcards = () => {
         </div>
       </div>
       
-      <div className="text-gray-600">
+      <div className="text-center text-gray-600">
         Card {currentCard + 1} of {flashcardsData.length}
       </div>
       
-      <div className="flex gap-4">
+      <div className="flex justify-center gap-4">
         <button 
           onClick={handlePrevious}
           className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 
             transition-colors duration-200"
         >
           Previous
+        </button>
+        <button 
+          onClick={() => handleAnswer(userAnswers[currentCard] === false)}
+          className={`px-4 py-2 text-white rounded-lg transition-colors duration-200
+            ${userAnswers[currentCard] ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'}`}
+        >
+          {userAnswers[currentCard] ? 'Easy' : 'Hard'}
         </button>
         <button 
           onClick={handleNext}
@@ -64,6 +84,12 @@ const Flashcards = () => {
           Next
         </button>
       </div>
+
+      {userAnswers[currentCard] !== undefined && (
+        <div className={`text-center text-lg ${userAnswers[currentCard] ? 'text-green-600' : 'text-red-600'}`}>
+          Difficulty: {userAnswers[currentCard] ? 'Easy' : 'Hard'}
+        </div>
+      )}
     </div>
   );
 };
