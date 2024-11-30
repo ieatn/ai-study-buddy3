@@ -1,11 +1,11 @@
 export const quizData = [
     {
-      question: "1+1",
+      question: "Where is blood pressure typically taken?",
       options: [
-        "2",
-        "3",
-        "4",
-        "5"
+        "Upper arm (brachial artery)",
+        "Wrist",
+        "Ankle",
+        "Chest"
       ],
       correctAnswerIndex: 0
     },

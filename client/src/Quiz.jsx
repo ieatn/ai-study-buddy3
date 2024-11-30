@@ -6,6 +6,10 @@ function Quiz() {
   const [score, setScore] = useState(0);
   const [showResult, setShowResult] = useState(false);
   const [wrongAnswers, setWrongAnswers] = useState([]);
+  const [selectedWrongAnswer, setSelectedWrongAnswer] = useState(null);
+  const [chatMessage, setChatMessage] = useState('');
+  const [aiResponse, setAiResponse] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleAnswerClick = (selectedOption, selectedIndex) => {
     if (selectedIndex === quizData[currentQuestion].correctAnswerIndex) {
@@ -29,6 +33,27 @@ function Quiz() {
     }
   };
 
+  const handleChatSubmit = async (wrong) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('http://localhost:5000/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: `I answered "${wrong.yourAnswer}" to the question "${wrong.question}". The correct answer was "${wrong.correctAnswer}". ${chatMessage}`,
+        }),
+      });
+      
+      const data = await response.json();
+      setAiResponse(data.response);
+    } catch (error) {
+      console.error('Error:', error);
+      setAiResponse('Sorry, there was an error getting the response.');
+    }
+    setIsLoading(false);
+  };
 
   // REVIEW SCREEN
   if (showResult) {
@@ -43,12 +68,37 @@ function Quiz() {
           {wrongAnswers.length > 0 && (
             <div className="mt-6">
               <h3 className="text-xl font-semibold text-gray-800 mb-4">Questions to Review:</h3>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {wrongAnswers.map((wrong, index) => (
                   <div key={index} className="bg-red-50 p-4 rounded-lg">
                     <p className="font-medium text-gray-800 mb-2">{wrong.question}</p>
                     <p className="text-red-600">Your answer: {wrong.yourAnswer}</p>
                     <p className="text-green-600">Correct answer: {wrong.correctAnswer}</p>
+                    
+                    <div className="mt-4">
+                      <textarea
+                        className="w-full p-2 border rounded-lg"
+                        placeholder="Ask a question about this answer..."
+                        value={selectedWrongAnswer === index ? chatMessage : ''}
+                        onChange={(e) => {
+                          setSelectedWrongAnswer(index);
+                          setChatMessage(e.target.value);
+                        }}
+                      />
+                      <button
+                        className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
+                        onClick={() => handleChatSubmit(wrong)}
+                        disabled={isLoading || !chatMessage.trim()}
+                      >
+                        {isLoading ? 'Asking...' : 'Ask for Explanation'}
+                      </button>
+                      
+                      {selectedWrongAnswer === index && aiResponse && (
+                        <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                          <p className="text-gray-800">{aiResponse}</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
